@@ -2,11 +2,46 @@
 
 import { Info, Save, Download } from 'lucide-react';
 import { EmptyMWDChart } from '@/app/components/EmptyMWDChart';
+import { WarningBanner } from '@/app/components/WarningBanner';
 import { useState } from 'react';
+import { getModelPrediction, ModelInput, ModelOutput } from '@/lib/model';
 
 export default function ForwardPrediction() {
   const [reactor, setReactor] = useState('batch');
-  
+  const [outputs, setOutputs] = useState<(ModelInput & ModelOutput)[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [viewType, setViewType] = useState<'chart' | 'table'>('chart');
+  const [M, setM] = useState(0.2);
+  const [S, setS] = useState(1.0);
+  const [I, setI] = useState(0.5);
+  const [temp, setTemp] = useState(300);
+  const [time, setTime] = useState(60);
+  const [Reaction, setReaction] = useState(3.0);
+
+  const handleRunPrediction = () => {
+    setError(null);
+    setLoading(true);
+    const inputs = {
+      M,
+      S,
+      I,
+      temp,
+      time,
+      Reaction,
+    }
+    const pred = getModelPrediction(inputs);
+    pred.then(res => {
+      console.log('Prediction result:', res);
+      setOutputs(prev => [...prev, { ...inputs, ...res }]);
+      setLoading(false);
+    }).catch(err => {
+      console.error('Prediction error:', err);
+      setError(err instanceof Error ? err.message : String(err));
+      setLoading(false);
+    });
+  }
+
   return (
     <div className="p-8">
       <div className="mb-6">
@@ -55,99 +90,176 @@ export default function ForwardPrediction() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Monomer Concentration (mol/L)
+                  M (Monomer)
                 </label>
                 <input
                   type="number"
                   step="0.1"
-                  placeholder="e.g., 2.5"
+                  value={M}
+                  onChange={(e) => setM(parseFloat(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Initiator Concentration (mol/L)
+                  S (Solvent)
                 </label>
                 <input
                   type="number"
-                  step="0.01"
-                  placeholder="e.g., 0.05"
+                  step="0.1"
+                  value={S}
+                  onChange={(e) => setS(parseFloat(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Temperature (°C)
+                  I (Initiator)
                 </label>
                 <input
                   type="number"
-                  placeholder="e.g., 70"
+                  step="0.1"
+                  value={I}
+                  onChange={(e) => setI(parseFloat(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reaction Time (minutes)
+                  Temperature (K)
                 </label>
                 <input
                   type="number"
-                  placeholder="e.g., 120"
+                  value={temp}
+                  onChange={(e) => setTemp(parseFloat(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Time (seconds)
+                </label>
+                <input
+                  type="number"
+                  value={time}
+                  onChange={(e) => setTime(parseFloat(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Reaction
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={Reaction}
+                  onChange={(e) => setReaction(parseFloat(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              Kinetic Parameters
-              <button className="text-gray-400 hover:text-gray-600">
-                <Info className="w-4 h-4" />
-              </button>
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  Propagation Rate (L/mol·s)
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <Info className="w-3 h-3" />
-                  </button>
-                </label>
-                <input
-                  type="number"
-                  step="1"
-                  placeholder="e.g., 1000"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  Termination Rate (L/mol·s)
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <Info className="w-3 h-3" />
-                  </button>
-                </label>
-                <input
-                  type="number"
-                  step="1"
-                  placeholder="e.g., 100"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+          <button
+            onClick={handleRunPrediction}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
             Predict MWD
           </button>
         </div>
 
         <div className="lg:col-span-2 space-y-6">
-          <EmptyMWDChart />
+          {error && (
+            <WarningBanner
+              type="warning"
+              message={error}
+              actionText="Dismiss"
+              onAction={() => setError(null)}
+            />
+          )}
+
+          <div className="bg-white rounded-lg border border-gray-200">
+            <div className="flex border-b border-gray-200">
+              <button
+                onClick={() => setViewType('chart')}
+                className={`flex-1 px-4 py-3 font-medium transition-colors ${viewType === 'chart'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-900'
+                  }`}
+              >
+                Chart View
+              </button>
+              <button
+                onClick={() => setViewType('table')}
+                className={`flex-1 px-4 py-3 font-medium transition-colors ${viewType === 'table'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-900'
+                  }`}
+              >
+                Table View
+              </button>
+            </div>
+            <div className="p-6">
+              {viewType === 'chart' ? (
+                <EmptyMWDChart />
+              ) : (
+                <div className="overflow-x-auto">
+                  {outputs.length > 0 ? (
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b-2 border-gray-300">
+                          <th colSpan={7} className="text-center py-3 px-4 font-semibold text-gray-900 border-r border-gray-300">Input Parameters</th>
+                          <th colSpan={7} className="text-center py-3 px-4 font-semibold text-gray-900">Output Results</th>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Run #</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">M</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">S</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">I</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Temp (K)</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Time (s)</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Reaction</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Molar Ratio</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Flow Rate</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Temp</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Pressure</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">E</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Confidence</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {outputs.map((output, index) => (
+                          <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                            <td className="py-3 px-4 text-gray-900 font-medium">{index + 1}</td>
+                            <td className="py-3 px-4 text-gray-700">{output.M?.toFixed(4)}</td>
+                            <td className="py-3 px-4 text-gray-700">{output.S?.toFixed(4)}</td>
+                            <td className="py-3 px-4 text-gray-700">{output.I?.toFixed(4)}</td>
+                            <td className="py-3 px-4 text-gray-700">{output.temp?.toFixed(1)}</td>
+                            <td className="py-3 px-4 text-gray-700">{output.time?.toFixed(1)}</td>
+                            <td className="py-3 px-4 text-gray-700">{output.Reaction?.toFixed(4)}</td>
+                            <td className="py-3 px-4 text-gray-700">{output.molarRatio?.toFixed(6)}</td>
+                            <td className="py-3 px-4 text-gray-700">{output.flowRate?.toFixed(6)}</td>
+                            <td className="py-3 px-4 text-gray-700">{output.temperature?.toFixed(2)}</td>
+                            <td className="py-3 px-4 text-gray-700">{output.pressure?.toFixed(4)}</td>
+                            <td className="py-3 px-4 text-gray-700">{output.e?.toFixed(6)}</td>
+                            <td className="py-3 px-4 text-gray-700">{output.confidence?.toFixed(4)}</td>
+                          </tr>
+                        ))}
+                        {loading && <span>Loading Next...</span>}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <p className="text-center text-gray-500 py-8">No predictions yet. Run a prediction to see results.</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
 
           <div className="flex gap-3">
             <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">

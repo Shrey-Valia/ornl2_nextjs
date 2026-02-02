@@ -121,7 +121,7 @@ export default function Dashboard() {
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link 
+          <Link
             href="/data-management"
             className="bg-blue-600 text-white rounded-lg p-6 hover:bg-blue-700 transition-colors flex items-center gap-4"
           >
@@ -134,7 +134,7 @@ export default function Dashboard() {
             </div>
           </Link>
 
-          <Link 
+          <Link
             href="/forward-prediction"
             className="bg-gray-800 text-white rounded-lg p-6 hover:bg-gray-900 transition-colors flex items-center gap-4"
           >
@@ -147,7 +147,7 @@ export default function Dashboard() {
             </div>
           </Link>
 
-          <Link 
+          <Link
             href="/results-analysis"
             className="bg-[#64748b] text-white rounded-lg p-6 hover:bg-[#475569] transition-colors flex items-center gap-4"
           >
