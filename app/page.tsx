@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { TrendingUp, Database, Activity, Upload, Play, Eye } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { recentPredictions, predictionData } from '@/lib/mock-data';
@@ -120,7 +121,10 @@ export default function Dashboard() {
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="bg-blue-600 text-white rounded-lg p-6 hover:bg-blue-700 transition-colors flex items-center gap-4">
+          <Link 
+            href="/data-management"
+            className="bg-blue-600 text-white rounded-lg p-6 hover:bg-blue-700 transition-colors flex items-center gap-4"
+          >
             <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
               <Upload className="w-6 h-6" />
             </div>
@@ -128,9 +132,12 @@ export default function Dashboard() {
               <div className="font-semibold">Upload Data</div>
               <div className="text-sm text-blue-100">Add new experimental data</div>
             </div>
-          </button>
+          </Link>
 
-          <button className="bg-gray-800 text-white rounded-lg p-6 hover:bg-gray-900 transition-colors flex items-center gap-4">
+          <Link 
+            href="/forward-prediction"
+            className="bg-gray-800 text-white rounded-lg p-6 hover:bg-gray-900 transition-colors flex items-center gap-4"
+          >
             <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
               <Play className="w-6 h-6" />
             </div>
@@ -138,9 +145,12 @@ export default function Dashboard() {
               <div className="font-semibold">Run Prediction</div>
               <div className="text-sm text-gray-300">Forward or inverse analysis</div>
             </div>
-          </button>
+          </Link>
 
-          <button className="bg-[#64748b] text-white rounded-lg p-6 hover:bg-[#475569] transition-colors flex items-center gap-4">
+          <Link 
+            href="/results-analysis"
+            className="bg-[#64748b] text-white rounded-lg p-6 hover:bg-[#475569] transition-colors flex items-center gap-4"
+          >
             <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
               <Eye className="w-6 h-6" />
             </div>
@@ -148,7 +158,7 @@ export default function Dashboard() {
               <div className="font-semibold">View Results</div>
               <div className="text-sm text-gray-300">Analyze past predictions</div>
             </div>
-          </button>
+          </Link>
         </div>
       </div>
     </div>
