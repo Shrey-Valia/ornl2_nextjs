@@ -3,12 +3,15 @@
 import { Info, Save, Download } from 'lucide-react';
 import { EmptyMWDChart } from '@/app/components/EmptyMWDChart';
 import { WarningBanner } from '@/app/components/WarningBanner';
-import { useState } from 'react';
+import { ReactElement, useState } from 'react';
 import { getModelPrediction, ModelInput, ModelOutput } from '@/lib/model';
+
+
+type TableEntry = ModelInput & ModelOutput;
 
 export default function ForwardPrediction() {
   const [reactor, setReactor] = useState('batch');
-  const [outputs, setOutputs] = useState<(ModelInput & ModelOutput)[]>([]);
+  const [outputs, setOutputs] = useState<TableEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [viewType, setViewType] = useState<'chart' | 'table'>('chart');
@@ -40,7 +43,29 @@ export default function ForwardPrediction() {
       setError(err instanceof Error ? err.message : String(err));
       setLoading(false);
     });
+
+
   }
+  function deltaIndicator(value: number): ReactElement {
+    return (<span className={value > 0 ? 'text-green-600' : value < 0 ? 'text-red-600' : 'text-yellow-600'}>
+      {value > 0 ? '▲' : value < 0 ? '▼' : '▬'} {value == 0 || value.toFixed(4)}
+    </span>);
+  }
+
+  const fieldConfig = [
+    { key: 'M', label: 'M', decimals: 4 },
+    { key: 'S', label: 'S', decimals: 4 },
+    { key: 'I', label: 'I', decimals: 4 },
+    { key: 'temp', label: 'Temp (K)', decimals: 1 },
+    { key: 'time', label: 'Time (s)', decimals: 1 },
+    { key: 'Reaction', label: 'Reaction', decimals: 4 },
+    { key: 'molarRatio', label: 'Molar Ratio', decimals: 6 },
+    { key: 'flowRate', label: 'Flow Rate', decimals: 6 },
+    { key: 'temperature', label: 'Temp', decimals: 2 },
+    { key: 'pressure', label: 'Pressure', decimals: 4 },
+    { key: 'e', label: 'E', decimals: 6 },
+    { key: 'confidence', label: 'Confidence', decimals: 4 },
+  ] as const;
 
   return (
     <div className="p-8">
@@ -217,40 +242,30 @@ export default function ForwardPrediction() {
                           <th colSpan={7} className="text-center py-3 px-4 font-semibold text-gray-900">Output Results</th>
                         </tr>
                         <tr className="border-b border-gray-200">
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Run #</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">M</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">S</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">I</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Temp (K)</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Time (s)</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Reaction</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Molar Ratio</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Flow Rate</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Temp</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Pressure</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">E</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Confidence</th>
+                          {fieldConfig.map(({ label }) => (
+                            <th key={label} className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">{label}</th>
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {outputs.map((output, index) => (
-                          <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                            <td className="py-3 px-4 text-gray-900 font-medium">{index + 1}</td>
-                            <td className="py-3 px-4 text-gray-700">{output.M?.toFixed(4)}</td>
-                            <td className="py-3 px-4 text-gray-700">{output.S?.toFixed(4)}</td>
-                            <td className="py-3 px-4 text-gray-700">{output.I?.toFixed(4)}</td>
-                            <td className="py-3 px-4 text-gray-700">{output.temp?.toFixed(1)}</td>
-                            <td className="py-3 px-4 text-gray-700">{output.time?.toFixed(1)}</td>
-                            <td className="py-3 px-4 text-gray-700">{output.Reaction?.toFixed(4)}</td>
-                            <td className="py-3 px-4 text-gray-700">{output.molarRatio?.toFixed(6)}</td>
-                            <td className="py-3 px-4 text-gray-700">{output.flowRate?.toFixed(6)}</td>
-                            <td className="py-3 px-4 text-gray-700">{output.temperature?.toFixed(2)}</td>
-                            <td className="py-3 px-4 text-gray-700">{output.pressure?.toFixed(4)}</td>
-                            <td className="py-3 px-4 text-gray-700">{output.e?.toFixed(6)}</td>
-                            <td className="py-3 px-4 text-gray-700">{output.confidence?.toFixed(4)}</td>
+                        {outputs.map((output, index) => {
+                          const previousOutput = outputs[index - 1];
+                          return (
+                            <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                              <td className="py-3 px-4 text-gray-900 font-medium">{index}</td>
+                              {fieldConfig.map(({ key, decimals }) => (
+                                <td key={key} className="py-3 px-4 text-gray-700">
+                                  {(output[key as keyof typeof output] as number)?.toFixed(decimals)} {index > 0 && deltaIndicator((output[key as keyof typeof output] as number) - (previousOutput[key as keyof typeof previousOutput] as number))}
+                                </td>
+                              ))}
+                            </tr>
+                          )
+                        })}
+                        {loading && (
+                          <tr>
+                            <td colSpan={13} className="py-3 px-4 text-center text-gray-600">Loading Next...</td>
                           </tr>
-                        ))}
-                        {loading && <span>Loading Next...</span>}
+                        )}
                       </tbody>
                     </table>
                   ) : (
