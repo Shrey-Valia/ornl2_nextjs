@@ -62,7 +62,7 @@ export default function ForwardPrediction() {
                   name="reactor"
                   value="batch"
                   checked={reactor === 'batch'}
-                  onChange={(e) => setReactor(e.target.value)}
+                  onChange={(e) => setReactor(e.target.value || 'batch')}
                   className="w-4 h-4 text-blue-600"
                 />
                 <span className="text-gray-900">Batch Reactor</span>
@@ -96,7 +96,7 @@ export default function ForwardPrediction() {
                   type="number"
                   step="0.1"
                   value={M}
-                  onChange={(e) => setM(parseFloat(e.target.value))}
+                  onChange={(e) => setM(parseFloat(e.target.value) || 0)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -109,7 +109,7 @@ export default function ForwardPrediction() {
                   type="number"
                   step="0.1"
                   value={S}
-                  onChange={(e) => setS(parseFloat(e.target.value))}
+                  onChange={(e) => setS(parseFloat(e.target.value) || 0)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -122,7 +122,7 @@ export default function ForwardPrediction() {
                   type="number"
                   step="0.1"
                   value={I}
-                  onChange={(e) => setI(parseFloat(e.target.value))}
+                  onChange={(e) => setI(parseFloat(e.target.value) || 0)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -134,7 +134,7 @@ export default function ForwardPrediction() {
                 <input
                   type="number"
                   value={temp}
-                  onChange={(e) => setTemp(parseFloat(e.target.value))}
+                  onChange={(e) => setTemp(parseFloat(e.target.value) || 0)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -146,7 +146,7 @@ export default function ForwardPrediction() {
                 <input
                   type="number"
                   value={time}
-                  onChange={(e) => setTime(parseFloat(e.target.value))}
+                  onChange={(e) => setTime(parseFloat(e.target.value) || 0)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -159,7 +159,7 @@ export default function ForwardPrediction() {
                   type="number"
                   step="0.1"
                   value={Reaction}
-                  onChange={(e) => setReaction(parseFloat(e.target.value))}
+                  onChange={(e) => setReaction(parseFloat(e.target.value) || 0)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
