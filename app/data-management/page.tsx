@@ -230,8 +230,8 @@ export default function DataManagement() {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${isDragging
-            ? 'border-blue-500 bg-blue-500/10'
-            : `${borderColor} ${bgCard} ${dark ? 'hover:border-gray-600' : 'hover:border-gray-400'}`
+          ? 'border-blue-500 bg-blue-500/10'
+          : `${borderColor} ${bgCard} ${dark ? 'hover:border-gray-600' : 'hover:border-gray-400'}`
           }`}
       >
         <div className="flex flex-col items-center">

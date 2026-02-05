@@ -52,13 +52,13 @@ export default function ResultsAnalysis() {
   // Calculate statistics from all predictions
   const calculateStats = () => {
     if (predictions.length === 0) return null;
-    
+
     const allOutputs = predictions.map(p => p.outputs);
     const avgConversion = allOutputs.reduce((sum, o) => sum + o.conversion, 0) / allOutputs.length;
     const avgMw = allOutputs.reduce((sum, o) => sum + o.mw, 0) / allOutputs.length;
     const minMw = Math.min(...allOutputs.map(o => o.mw));
     const maxMw = Math.max(...allOutputs.map(o => o.mw));
-    
+
     return {
       avgConversion,
       avgMw,
@@ -74,19 +74,19 @@ export default function ResultsAnalysis() {
   // Create sensitivity data from prediction variations
   const generateSensitivityData = () => {
     if (predictions.length < 2) return null;
-    
+
     const tempValues = predictions.map(p => p.inputs.temp);
     const monomersValues = predictions.map(p => p.inputs.M);
     const timeValues = predictions.map(p => p.inputs.time);
     const initiatorValues = predictions.map(p => p.inputs.I);
-    
+
     const tempVariance = Math.max(...tempValues) - Math.min(...tempValues);
     const monomersVariance = Math.max(...monomersValues) - Math.min(...monomersValues);
     const timeVariance = Math.max(...timeValues) - Math.min(...timeValues);
     const initiatorVariance = Math.max(...initiatorValues) - Math.min(...initiatorValues);
-    
+
     const maxVariance = Math.max(tempVariance, monomersVariance, timeVariance, initiatorVariance);
-    
+
     return [
       { param: 'Temperature', low: (tempVariance / maxVariance) * 0.3, med: (tempVariance / maxVariance) * 0.6, high: (tempVariance / maxVariance) * 0.9 },
       { param: 'Monomer', low: (monomersVariance / maxVariance) * 0.3, med: (monomersVariance / maxVariance) * 0.6, high: (monomersVariance / maxVariance) * 0.9 },
@@ -103,7 +103,7 @@ export default function ResultsAnalysis() {
 
   const exportCSV = () => {
     if (!latestPrediction) return;
-    
+
     let csv = 'Molecular Weight (g/mol),Predicted Weight Fraction\n';
     latestPrediction.mwdData.forEach(row => { csv += `${row.mw},${row.predicted}\n`; });
     csv += '\n\nInput Parameters\n';
@@ -120,7 +120,7 @@ export default function ResultsAnalysis() {
     csv += `Mz,${latestPrediction.outputs.mz.toFixed(2)}\n`;
     csv += `Mz+1,${latestPrediction.outputs.mzPlus1.toFixed(2)}\n`;
     csv += `Mv,${latestPrediction.outputs.mv.toFixed(2)}\n`;
-    
+
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -132,7 +132,7 @@ export default function ResultsAnalysis() {
 
   const exportJSON = () => {
     if (!latestPrediction) return;
-    
+
     const blob = new Blob([JSON.stringify(latestPrediction, null, 2)], { type: 'application/json' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -150,7 +150,7 @@ export default function ResultsAnalysis() {
         <div className={`mt-8 rounded-lg border-2 border-dashed ${borderColor} p-12 text-center`}>
           <svg className={`w-16 h-16 mx-auto mb-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
+          </svg>
           <p className={`text-lg font-medium mb-2 ${textPrimary}`}>No Results Yet</p>
           <p className={textSecondary}>Make a prediction in Forward Prediction to see results here</p>
         </div>

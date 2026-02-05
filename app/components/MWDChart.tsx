@@ -41,44 +41,44 @@ export function MWDChart({ title = "Molecular Weight Distribution" }: MWDChartPr
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={mwdChartData}>
           <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-          <XAxis 
-            dataKey="mw" 
+          <XAxis
+            dataKey="mw"
             label={{ value: 'Molecular Weight (g/mol)', position: 'insideBottom', offset: -5, fill: axisColor }}
             scale="log"
             domain={['dataMin', 'dataMax']}
             tick={{ fontSize: 12, fill: axisColor }}
             stroke={axisColor}
           />
-          <YAxis 
+          <YAxis
             label={{ value: 'Weight Fraction', angle: -90, position: 'insideLeft', fill: axisColor }}
             tick={{ fontSize: 12, fill: axisColor }}
             stroke={axisColor}
           />
-          <Tooltip 
-            contentStyle={{ 
-              backgroundColor: dark ? '#1f2937' : '#fff', 
-              borderColor: dark ? '#374151' : '#e5e7eb', 
+          <Tooltip
+            contentStyle={{
+              backgroundColor: dark ? '#1f2937' : '#fff',
+              borderColor: dark ? '#374151' : '#e5e7eb',
               color: dark ? '#fff' : '#111',
               borderRadius: '8px'
             }}
             labelStyle={{ color: dark ? '#fff' : '#111' }}
           />
-          <Legend 
+          <Legend
             wrapperStyle={{ color: axisColor }}
           />
-          <Line 
-            type="monotone" 
-            dataKey="predicted" 
-            stroke="#2563eb" 
-            strokeWidth={2} 
+          <Line
+            type="monotone"
+            dataKey="predicted"
+            stroke="#2563eb"
+            strokeWidth={2}
             name="Predicted"
             dot={false}
           />
-          <Line 
-            type="monotone" 
-            dataKey="experimental" 
-            stroke="#f97316" 
-            strokeWidth={2} 
+          <Line
+            type="monotone"
+            dataKey="experimental"
+            stroke="#f97316"
+            strokeWidth={2}
             name="Experimental"
             strokeDasharray="5 5"
             dot={false}

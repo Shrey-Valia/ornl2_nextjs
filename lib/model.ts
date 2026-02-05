@@ -47,9 +47,9 @@ export async function getModelPrediction(input: ModelInput): Promise<ModelOutput
             body: JSON.stringify(input),
         });
 
-    if (!response.ok) {
-      throw new Error(`Model prediction failed: ${response.statusText}`);
-    }
+        if (!response.ok) {
+            throw new Error(`Model prediction failed: ${response.statusText}`);
+        }
 
         const data = await response.json();
         const payload = data.outputs ?? data;
