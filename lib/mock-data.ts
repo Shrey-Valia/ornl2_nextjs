@@ -67,3 +67,17 @@ export const modelMetrics = {
   epochs: 500,
   learningRate: 0.001,
 };
+export const trainingData = Array.from({ length: 50 }, (_, i) => ({
+  epoch: i + 1,
+  training: 0.5 * Math.exp(-i * 0.05) + 0.02 + Math.random() * 0.02,
+  validation: 0.55 * Math.exp(-i * 0.045) + 0.025 + Math.random() * 0.03,
+}));
+
+export const errorDistribution = [
+  { range: '0-1%', count: 15 },
+  { range: '1-2%', count: 22 },
+  { range: '2-3%', count: 18 },
+  { range: '3-4%', count: 12 },
+  { range: '4-5%', count: 8 },
+  { range: '5%+', count: 5 },
+];
