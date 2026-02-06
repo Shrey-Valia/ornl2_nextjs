@@ -37,6 +37,7 @@ export default function ForwardPrediction() {
     pred.then(res => {
       console.log('Prediction result:', res);
       setOutputs(prev => [...prev, { ...inputs, ...res }]);
+      setViewType('table');
       setLoading(false);
     }).catch(err => {
       console.error('Prediction error:', err);
@@ -58,13 +59,13 @@ export default function ForwardPrediction() {
     { key: 'I', label: 'I', decimals: 4 },
     { key: 'temp', label: 'Temp (K)', decimals: 1 },
     { key: 'time', label: 'Time (s)', decimals: 1 },
-    { key: 'Reaction', label: 'Reaction', decimals: 4 },
-    { key: 'molarRatio', label: 'Molar Ratio', decimals: 6 },
-    { key: 'flowRate', label: 'Flow Rate', decimals: 6 },
-    { key: 'temperature', label: 'Temp', decimals: 2 },
-    { key: 'pressure', label: 'Pressure', decimals: 4 },
-    { key: 'e', label: 'E', decimals: 6 },
-    { key: 'confidence', label: 'Confidence', decimals: 4 },
+    { key: 'Reaction', label: 'Reaction', decimals: 1 },
+    { key: 'conversion', label: 'Conversion (X)', decimals: 4 },
+    { key: 'mn', label: 'Mn', decimals: 2 },
+    { key: 'mw', label: 'Mw', decimals: 2 },
+    { key: 'mz', label: 'Mz', decimals: 2 },
+    { key: 'mzPlus1', label: 'Mz+1', decimals: 2 },
+    { key: 'mv', label: 'Mv', decimals: 2 },
   ] as const;
 
   return (
@@ -239,9 +240,10 @@ export default function ForwardPrediction() {
                       <thead>
                         <tr className="border-b-2 border-gray-300">
                           <th colSpan={7} className="text-center py-3 px-4 font-semibold text-gray-900 border-r border-gray-300">Input Parameters</th>
-                          <th colSpan={7} className="text-center py-3 px-4 font-semibold text-gray-900">Output Results</th>
+                          <th colSpan={6} className="text-center py-3 px-4 font-semibold text-gray-900">Output Results</th>
                         </tr>
                         <tr className="border-b border-gray-200">
+                          <th className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">Run</th>
                           {fieldConfig.map(({ label }) => (
                             <th key={label} className="text-left py-3 px-4 font-semibold text-gray-900 text-xs">{label}</th>
                           ))}
@@ -252,7 +254,7 @@ export default function ForwardPrediction() {
                           const previousOutput = outputs[index - 1];
                           return (
                             <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                              <td className="py-3 px-4 text-gray-900 font-medium">{index}</td>
+                              <td className="py-3 px-4 text-gray-900 font-medium">{index + 1}</td>
                               {fieldConfig.map(({ key, decimals }) => (
                                 <td key={key} className="py-3 px-4 text-gray-700">
                                   {(output[key as keyof typeof output] as number)?.toFixed(decimals)} {index > 0 && deltaIndicator((output[key as keyof typeof output] as number) - (previousOutput[key as keyof typeof previousOutput] as number))}

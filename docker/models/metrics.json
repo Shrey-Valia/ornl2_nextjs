@@ -1,0 +1,18 @@
+{
+  "excel_path": "/Users/justindong/Northeastern/Research/PCINN/PMMAordered.xlsx",
+  "assets_dir": "/Users/justindong/Northeastern/Research/ornl2_nextjs/docker",
+  "out_dir": "/Users/justindong/Northeastern/Research/ornl2_nextjs/docker/models",
+  "test_reaction": 8,
+  "epochs": 10000,
+  "lr": 0.0003,
+  "jac_samples": 32,
+  "num_train_rows": 49,
+  "num_test_rows": 8,
+  "final_nn_test_loss": 0.1282244473695755,
+  "final_pcinn_test_loss": 0.004596257116645575,
+  "outputs": [
+    "nn_model.pt",
+    "pcinn_model.pt",
+    "metrics.json"
+  ]
+}

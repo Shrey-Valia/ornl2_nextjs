@@ -6,20 +6,21 @@ export type ModelInput = {
     temp: number;
     time: number;
     Reaction: number;
+    model_type?: 'pcinn' | 'nn';
 };
 
 export type ModelOutput = {
-    molarRatio: number;
-    flowRate: number;
-    temperature: number;
-    pressure: number;
-    e: number;
-    confidence: number;
+    conversion: number;
+    mn: number;
+    mw: number;
+    mz: number;
+    mzPlus1: number;
+    mv: number;
 };
 
 export async function getModelPrediction(input: ModelInput): Promise<ModelOutput> {
     try {
-        const response = await fetch('http://localhost:8000/predict', {
+        const response = await fetch('/api/model', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -32,15 +33,16 @@ export async function getModelPrediction(input: ModelInput): Promise<ModelOutput
         }
 
         const data = await response.json();
-        const [molarRatio, flowRate, temperature, pressure, e] = data.m_output;
-        const [confidence] = data.x_output;
+        const payload = data.outputs ?? data;
+        const [mn, mw, mz, mzPlus1, mv] = payload.m_output;
+        const [conversion] = payload.x_output;
         return {
-            molarRatio,
-            flowRate,
-            temperature,
-            pressure,
-            e,
-            confidence,
+            conversion,
+            mn,
+            mw,
+            mz,
+            mzPlus1,
+            mv,
         };
     } catch (error) {
         console.error('Error during model prediction:', error);
