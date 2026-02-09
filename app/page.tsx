@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { TrendingUp, Database, Activity, Upload, Play, Eye } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { recentPredictions, predictionData } from '@/lib/mock-data';
 import { useSettings } from '@/app/context/SettingsContext';
 
 export default function Dashboard() {
@@ -41,7 +40,7 @@ export default function Dashboard() {
             </div>
           </div>
           <ResponsiveContainer width="100%" height={80}>
-            <LineChart data={recentPredictions}>
+            <LineChart data={[]}>
               <Line type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
@@ -119,7 +118,7 @@ export default function Dashboard() {
         <div className={`${bgCard} rounded-lg border ${borderColor} p-6`}>
           <h2 className={`text-lg font-semibold mb-4 ${textPrimary}`}>Model Performance Metrics</h2>
           <ResponsiveContainer width="100%" height={150}>
-            <BarChart data={predictionData}>
+            <BarChart data={[]}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
               <XAxis dataKey="name" tick={{ fontSize: 12, fill: axisColor }} stroke={axisColor} />
               <YAxis tick={{ fontSize: 12, fill: axisColor }} stroke={axisColor} />

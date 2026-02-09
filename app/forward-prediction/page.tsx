@@ -4,6 +4,7 @@ import { Info, Save, Download, CheckCircle, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSettings } from '@/app/context/SettingsContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { getModelPrediction } from '@/lib/model';
 
 type PredictionResult = {
   id: string;
@@ -20,12 +21,12 @@ export default function ForwardPrediction() {
   const dark = settings.darkMode;
 
   const [reactor, setReactor] = useState('batch');
-  const [M, setM] = useState(0.2);
-  const [S, setS] = useState(1.0);
-  const [I, setI] = useState(0.5);
-  const [temp, setTemp] = useState(300);
-  const [time, setTime] = useState(60);
-  const [Reaction, setReaction] = useState(3.0);
+  const [MInput, setM] = useState<string>('0.2');
+  const [SInput, setS] = useState<string>('1.0');
+  const [IInput, setI] = useState<string>('0.5');
+  const [tempInput, setTemp] = useState<string>('300');
+  const [timeInput, setTime] = useState<string>('60');
+  const [ReactionInput, setReaction] = useState<string>('3.0');
   const [loading, setLoading] = useState(false);
   const [predictions, setPredictions] = useState<PredictionResult[]>([]);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -52,64 +53,37 @@ export default function ForwardPrediction() {
   const labelClass = dark ? 'text-gray-300' : 'text-gray-700';
   const inputClass = `w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${dark ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300 text-gray-900'}`;
 
-  const generateMWDData = (inputs: { M: number; S: number; I: number; temp: number; time: number; Reaction: number }) => {
-    return Array.from({ length: 50 }, (_, i) => {
-      const mw = Math.pow(10, 2 + i * 0.08);
-      const peak = 100000 * (inputs.M / 0.2) * (inputs.temp / 300);
-      const sigma = 0.5 + (inputs.Reaction / 10);
-      const logMw = Math.log10(mw);
-      const logPeak = Math.log10(peak);
-      const predicted = Math.exp(-Math.pow(logMw - logPeak, 2) / (2 * sigma * sigma));
-      return { mw: Math.round(mw), predicted: Number(predicted.toFixed(4)) };
-    });
-  };
-
   const handlePredict = async () => {
     setLoading(true);
     setError(null);
 
+    const M = parseFloat(MInput);
+    const S = parseFloat(SInput);
+    const I = parseFloat(IInput);
+    const temp = parseFloat(tempInput);
+    const time = parseFloat(timeInput);
+    const Reaction = parseFloat(ReactionInput);
+
+    if (isNaN(M) || isNaN(S) || isNaN(I) || isNaN(temp) || isNaN(time) || isNaN(Reaction)) {
+      setError('Please enter valid numeric values for all input fields.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch('http://127.0.0.1:8000/predict', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ M, S, I, temp, time, Reaction }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const [molarRatio, flowRate, temperature, pressure, e] = data.m_output;
-        const [confidence] = data.x_output;
-
-        const result: PredictionResult = {
-          id: Date.now().toString(),
-          timestamp: new Date().toISOString(),
-          inputs: { M, S, I, temp, time, Reaction },
-          outputs: { molarRatio, flowRate, temperature, pressure, e, confidence },
-          mwdData: generateMWDData({ M, S, I, temp, time, Reaction }),
-        };
-        setPredictions(prev => [...prev, result]);
-        setHasUnsavedChanges(true);
-      } else {
-        throw new Error('Backend error');
-      }
-    } catch {
-      console.log('Using mock prediction (backend not available)');
-      const mockResult: PredictionResult = {
+      const response = await getModelPrediction({ M, S, I, temp, time, Reaction });
+      const { molarRatio, flowRate, temperature, pressure, e, confidence } = response;
+      const result: PredictionResult = {
         id: Date.now().toString(),
         timestamp: new Date().toISOString(),
         inputs: { M, S, I, temp, time, Reaction },
-        outputs: {
-          molarRatio: M * S * 0.5 + Math.random() * 0.1,
-          flowRate: (temp / 300) * 0.8 + Math.random() * 0.1,
-          temperature: temp * 0.95 + Math.random() * 10,
-          pressure: Reaction * 0.3 + Math.random() * 0.05,
-          e: I * 0.001 + Math.random() * 0.0001,
-          confidence: 0.85 + Math.random() * 0.1,
-        },
-        mwdData: generateMWDData({ M, S, I, temp, time, Reaction }),
+        outputs: { molarRatio, flowRate, temperature, pressure, e, confidence },
+        mwdData: [],
       };
-      setPredictions(prev => [...prev, mockResult]);
+      setPredictions(prev => [...prev, result]);
       setHasUnsavedChanges(true);
+    } catch (e) {
+      setError("Internal server error, please ensure the backend is active.");
     }
 
     setLoading(false);
@@ -176,7 +150,7 @@ export default function ForwardPrediction() {
   const deltaIndicator = (current: number, previous: number) => {
     const diff = current - previous;
     if (Math.abs(diff) < 0.0001) return <span className="text-yellow-500">▬</span>;
-    return diff > 0 
+    return diff > 0
       ? <span className="text-green-500">▲ +{diff.toFixed(4)}</span>
       : <span className="text-red-500">▼ {diff.toFixed(4)}</span>;
   };
@@ -212,27 +186,27 @@ export default function ForwardPrediction() {
             <div className="space-y-4">
               <div>
                 <label className={`block text-sm font-medium mb-2 ${labelClass}`}>M (Monomer)</label>
-                <input type="number" step="0.1" value={M} onChange={(e) => setM(parseFloat(e.target.value) || 0)} className={inputClass} />
+                <input type="number" step="0.1" value={MInput} onChange={(e) => setM(e.target.value)} className={inputClass} />
               </div>
               <div>
                 <label className={`block text-sm font-medium mb-2 ${labelClass}`}>S (Solvent)</label>
-                <input type="number" step="0.1" value={S} onChange={(e) => setS(parseFloat(e.target.value) || 0)} className={inputClass} />
+                <input type="number" step="0.1" value={SInput} onChange={(e) => setS(e.target.value)} className={inputClass} />
               </div>
               <div>
                 <label className={`block text-sm font-medium mb-2 ${labelClass}`}>I (Initiator)</label>
-                <input type="number" step="0.1" value={I} onChange={(e) => setI(parseFloat(e.target.value) || 0)} className={inputClass} />
+                <input type="number" step="0.1" value={IInput} onChange={(e) => setI(e.target.value)} className={inputClass} />
               </div>
               <div>
                 <label className={`block text-sm font-medium mb-2 ${labelClass}`}>Temperature (K)</label>
-                <input type="number" value={temp} onChange={(e) => setTemp(parseFloat(e.target.value) || 0)} className={inputClass} />
+                <input type="number" value={tempInput} onChange={(e) => setTemp(e.target.value)} className={inputClass} />
               </div>
               <div>
                 <label className={`block text-sm font-medium mb-2 ${labelClass}`}>Time (seconds)</label>
-                <input type="number" value={time} onChange={(e) => setTime(parseFloat(e.target.value) || 0)} className={inputClass} />
+                <input type="number" value={timeInput} onChange={(e) => setTime(e.target.value)} className={inputClass} />
               </div>
               <div>
                 <label className={`block text-sm font-medium mb-2 ${labelClass}`}>Reaction</label>
-                <input type="number" step="0.1" value={Reaction} onChange={(e) => setReaction(parseFloat(e.target.value) || 0)} className={inputClass} />
+                <input type="number" step="0.1" value={ReactionInput} onChange={(e) => setReaction(e.target.value)} className={inputClass} />
               </div>
             </div>
           </div>
@@ -365,25 +339,25 @@ export default function ForwardPrediction() {
           </div>
 
           <div className="flex gap-3 flex-wrap">
-            <button 
-              onClick={handleSave} 
-              disabled={predictions.length === 0} 
+            <button
+              onClick={handleSave}
+              disabled={predictions.length === 0}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${predictions.length === 0 ? 'opacity-50 cursor-not-allowed' : ''} ${saveSuccess ? 'bg-green-600 text-white' : dark ? 'bg-gray-600 text-gray-200 hover:bg-gray-500' : 'bg-white border border-gray-300 hover:bg-gray-50'}`}
             >
               {saveSuccess ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
               {saveSuccess ? 'Saved!' : 'Save Prediction'}
               {hasUnsavedChanges && !saveSuccess && <span className="w-2 h-2 bg-orange-500 rounded-full"></span>}
             </button>
-            <button 
-              onClick={handleExport} 
-              disabled={predictions.length === 0} 
+            <button
+              onClick={handleExport}
+              disabled={predictions.length === 0}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${predictions.length === 0 ? 'opacity-50 cursor-not-allowed' : ''} ${dark ? 'bg-gray-600 text-gray-200 hover:bg-gray-500' : 'bg-white border border-gray-300 hover:bg-gray-50'}`}
             >
               <Download className="w-4 h-4" /> Export CSV
             </button>
-            <button 
-              onClick={handleClearAll} 
-              disabled={predictions.length === 0} 
+            <button
+              onClick={handleClearAll}
+              disabled={predictions.length === 0}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${predictions.length === 0 ? 'opacity-50 cursor-not-allowed' : ''} ${dark ? 'bg-red-900/50 text-red-300 hover:bg-red-900/70' : 'bg-red-50 border border-red-200 text-red-700 hover:bg-red-100'}`}
             >
               <Trash2 className="w-4 h-4" /> Clear All
