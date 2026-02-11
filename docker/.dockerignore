@@ -1,8 +1,26 @@
-__pycache__
-*.pyc
-*.pyo
-*.pyd
+﻿# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 .Python
-.env
-.venv
-venv
+env/
+venv/
+.venv/
+
+# Output/cache
+output/
+*.log
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Testing
+tests/
+*.test.py
