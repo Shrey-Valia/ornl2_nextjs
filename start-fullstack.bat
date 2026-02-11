@@ -23,6 +23,24 @@ echo Starting all services...
 echo   - Backend: http://localhost:8000
 echo   - Frontend: http://localhost:3000
 echo.
-docker-compose up
 
+REM Start docker-compose in background
+start /B docker-compose up
+
+REM Wait for frontend to be ready
+echo Waiting for frontend to be ready...
+:wait_loop
+timeout /t 3 /nobreak >nul
+curl -s -o nul -w "%%{http_code}" http://localhost:3000 | findstr "200" >nul
+if %errorlevel% neq 0 (
+    echo   Still waiting...
+    goto wait_loop
+)
+
+echo.
+echo All services are ready! Opening browser...
+start http://localhost:3000
+
+echo.
+echo Press Ctrl+C to stop all services.
 pause

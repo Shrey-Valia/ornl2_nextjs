@@ -26,4 +26,8 @@ echo Starting Next.js frontend (local development)...
 echo   - Backend: http://localhost:8000
 echo   - Frontend: http://localhost:3000
 echo.
+
+REM Open browser after a short delay
+start /B cmd /c "timeout /t 8 /nobreak >nul && start http://localhost:3000"
+
 npm run dev
