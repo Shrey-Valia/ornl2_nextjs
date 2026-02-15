@@ -1,4 +1,3 @@
-
 export type ModelInput = {
     M: number;
     S: number;
@@ -18,6 +17,8 @@ export type ModelOutput = {
     mv: number;
 };
 
+const API_URL = 'http://localhost:8000/predict';
+
 export async function getModelPrediction(input: ModelInput): Promise<ModelOutput> {
     try {
         const response = await fetch('/api/model', {
@@ -28,9 +29,9 @@ export async function getModelPrediction(input: ModelInput): Promise<ModelOutput
             body: JSON.stringify(input),
         });
 
-        if (!response.ok) {
-            throw new Error(`Model prediction failed: ${response.statusText}`);
-        }
+    if (!response.ok) {
+      throw new Error(`Model prediction failed: ${response.statusText}`);
+    }
 
         const data = await response.json();
         const payload = data.outputs ?? data;
