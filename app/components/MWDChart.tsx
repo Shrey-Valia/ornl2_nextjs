@@ -1,7 +1,6 @@
 'use client';
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { mwdChartData } from '@/lib/mock-data';
 import { useSettings } from '@/app/context/SettingsContext';
 
 interface MWDChartProps {
@@ -17,6 +16,24 @@ export function MWDChart({ title = "Molecular Weight Distribution" }: MWDChartPr
   const textPrimary = dark ? 'text-white' : 'text-gray-900';
   const gridStroke = dark ? '#374151' : '#e5e7eb';
   const axisColor = dark ? '#9ca3af' : '#6b7280';
+
+  // Generate sample MWD data inline
+  const generateSampleData = () => {
+    const data = [];
+    for (let i = 0; i < 50; i++) {
+      const mw = Math.pow(10, 3 + (i / 50) * 3); // 1k to 1M
+      const predicted = Math.exp(-Math.pow((Math.log10(mw) - 4.5) / 0.5, 2));
+      const experimental = predicted * (0.9 + Math.random() * 0.2);
+      data.push({
+        mw: Math.round(mw),
+        predicted: Math.max(0, predicted),
+        experimental: Math.max(0, experimental),
+      });
+    }
+    return data;
+  };
+
+  const mwdChartData = generateSampleData();
 
   return (
     <div className={`${bgCard} rounded-lg border ${borderColor} p-6`}>

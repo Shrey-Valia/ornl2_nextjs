@@ -55,17 +55,29 @@ export default function ForwardPrediction() {
 
   const generateMWDData = (mn: number, mw: number, mz: number) => {
     const data: { mw: number; predicted: number }[] = [];
-    const baseWeight = mn;
     const numPoints = 50;
-    const polydispersity = mz / mw;
-
+    
+    // Handle edge cases where model outputs might be very small or invalid
+    const safeMw = Math.max(Math.abs(mw), 1000); // Minimum 1000 g/mol for visualization
+    const safeMz = Math.max(Math.abs(mz), safeMw * 1.1); // Ensure Mz > Mw
+    const safePolydispersity = safeMz / safeMw; // PDI = Mz/Mw
+    
+    // Generate MW values on log scale from 100 to 1M g/mol
+    const minMW = 100;
+    const maxMW = 1000000;
+    
     for (let i = 0; i < numPoints; i++) {
-      const mwPoint = baseWeight * Math.pow(10, (i / numPoints) * 2);
-      const mean = mw;
-      const stdDev = mw * (polydispersity - 1);
-      const exponent = -Math.pow((mwPoint - mean) / (stdDev || 1), 2) / 2;
-      const predicted = Math.exp(exponent) / ((stdDev || 1) * Math.sqrt(2 * Math.PI));
-
+      // Log scale: 10^2 to 10^6
+      const logMW = Math.log10(minMW) + (i / (numPoints - 1)) * (Math.log10(maxMW) - Math.log10(minMW));
+      const mwPoint = Math.pow(10, logMW);
+      
+      // Lognormal distribution (standard for polymer MW distributions)
+      const logMean = Math.log(safeMw);
+      const logStdDev = Math.log(safePolydispersity) / 2;
+      
+      const exponent = -Math.pow((Math.log(mwPoint) - logMean) / logStdDev, 2) / 2;
+      const predicted = (1 / (mwPoint * logStdDev * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
+      
       data.push({
         mw: Math.round(mwPoint),
         predicted: Math.max(0, predicted),
@@ -94,6 +106,10 @@ export default function ForwardPrediction() {
 
     try {
       const response = await getModelPrediction({ M, S, I, temp, time, Reaction });
+      
+      // DEBUG: Log what the model returns
+      console.log('Model response:', response);
+      
       const { conversion, mn, mw, mz, mzPlus1, mv } = response;
       
       const mwdData = generateMWDData(mn, mw, mz);
@@ -290,7 +306,7 @@ export default function ForwardPrediction() {
                       </div>
                       <div className={`p-3 rounded-lg ${dark ? 'bg-gray-600' : 'bg-gray-50'}`}>
                         <div className={mutedClass}>Polydispersity</div>
-                        <div className={`text-lg font-semibold ${textClass}`}>{(latestPrediction.outputs.mz / latestPrediction.outputs.mw).toFixed(2)}</div>
+                        <div className={`text-lg font-semibold ${textClass}`}>{(latestPrediction.outputs.mz / Math.max(latestPrediction.outputs.mw, 1)).toFixed(2)}</div>
                       </div>
                     </div>
                   </div>
@@ -325,8 +341,8 @@ export default function ForwardPrediction() {
                       <tbody>
                         {predictions.map((pred, index) => {
                           const prev = predictions[index - 1];
-                          const pdi = pred.outputs.mz / pred.outputs.mw;
-                          const prevPdi = prev ? prev.outputs.mz / prev.outputs.mw : 0;
+                          const pdi = pred.outputs.mz / Math.max(pred.outputs.mw, 1);
+                          const prevPdi = prev ? prev.outputs.mz / Math.max(prev.outputs.mw, 1) : 0;
                           return (
                             <tr key={pred.id} className={`border-b ${dark ? 'border-gray-600 hover:bg-gray-600' : 'border-gray-100 hover:bg-gray-50'}`}>
                               <td className={`py-3 px-2 font-medium ${textClass}`}>{index + 1}</td>

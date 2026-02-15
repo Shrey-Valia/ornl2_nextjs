@@ -4,7 +4,6 @@ import { FileImage, FileText, FileSpreadsheet, FileJson, ChevronDown, ChevronUp,
 import { MWDChart } from '@/app/components/MWDChart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useState, useRef } from 'react';
-import { chainLengthData, mwdChartData } from '@/lib/mock-data';
 import { useSettings } from '@/app/context/SettingsContext';
 
 const sensitivityData = [
@@ -40,6 +39,37 @@ export default function ResultsAnalysis() {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [exportStatus, setExportStatus] = useState<string | null>(null);
   const chartRef = useRef<HTMLDivElement>(null);
+
+  // Generate sample chain length data inline
+  const generateChainLengthData = () => {
+    return [
+      { length: '0-100', count: 12 },
+      { length: '100-200', count: 28 },
+      { length: '200-300', count: 42 },
+      { length: '300-400', count: 35 },
+      { length: '400-500', count: 22 },
+      { length: '500+', count: 8 },
+    ];
+  };
+
+  // Generate sample MWD chart data inline
+  const generateMWDChartData = () => {
+    const data = [];
+    for (let i = 0; i < 50; i++) {
+      const mw = Math.pow(10, 3 + (i / 50) * 3);
+      const predicted = Math.exp(-Math.pow((Math.log10(mw) - 4.5) / 0.5, 2));
+      const experimental = predicted * (0.9 + Math.random() * 0.2);
+      data.push({
+        mw: Math.round(mw),
+        predicted: Math.max(0, predicted),
+        experimental: Math.max(0, experimental),
+      });
+    }
+    return data;
+  };
+
+  const chainLengthData = generateChainLengthData();
+  const mwdChartData = generateMWDChartData();
 
   const toggleSection = (section: string) => setExpandedSection(expandedSection === section ? null : section);
   const showExportSuccess = (type: string) => { setExportStatus(type); setTimeout(() => setExportStatus(null), 2000); };

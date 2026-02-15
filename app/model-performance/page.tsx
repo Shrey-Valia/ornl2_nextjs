@@ -2,7 +2,6 @@
 
 import { TrendingUp, Activity, Database } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { trainingData, errorDistribution } from '@/lib/mock-data';
 import { useSettings } from '@/app/context/SettingsContext';
 
 const performanceByType = [
@@ -30,6 +29,36 @@ export default function ModelPerformance() {
   const gridStroke = dark ? '#374151' : '#e5e7eb';
   const axisColor = dark ? '#9ca3af' : '#6b7280';
   const progressBg = dark ? 'bg-gray-700' : 'bg-gray-200';
+
+  // Generate sample training data inline
+  const generateTrainingData = () => {
+    const data = [];
+    for (let epoch = 1; epoch <= 100; epoch++) {
+      const trainingLoss = 2 * Math.exp(-epoch / 30) + Math.random() * 0.1;
+      const validationLoss = 2.2 * Math.exp(-epoch / 30) + Math.random() * 0.15;
+      data.push({
+        epoch,
+        training: Math.max(0, trainingLoss),
+        validation: Math.max(0, validationLoss),
+      });
+    }
+    return data;
+  };
+
+  // Generate sample error distribution data inline
+  const generateErrorDistribution = () => {
+    return [
+      { range: '0-1%', count: 15 },
+      { range: '1-2%', count: 20 },
+      { range: '2-3%', count: 25 },
+      { range: '3-4%', count: 18 },
+      { range: '4-5%', count: 10 },
+      { range: '5%+', count: 2 },
+    ];
+  };
+
+  const trainingData = generateTrainingData();
+  const errorDistribution = generateErrorDistribution();
 
   return (
     <div className="p-8 space-y-6">
