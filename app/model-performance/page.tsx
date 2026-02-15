@@ -3,7 +3,6 @@
 import { TrendingUp, TrendingDown, Activity, Database } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { trainingData, errorDistribution } from '@/lib/mock-data';
-
 const performanceByType = [
   { type: 'Batch', accuracy: 94 },
   { type: 'Flow', accuracy: 0 },

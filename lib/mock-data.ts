@@ -67,3 +67,20 @@ export const modelMetrics = {
   epochs: 500,
   learningRate: 0.001,
 };
+
+export const trainingData = [
+  { epoch: 0, training: 0.8, validation: 0.85 },
+  { epoch: 20, training: 0.45, validation: 0.48 },
+  { epoch: 40, training: 0.28, validation: 0.32 },
+  { epoch: 60, training: 0.18, validation: 0.25 },
+  { epoch: 80, training: 0.12, validation: 0.22 },
+  { epoch: 100, training: 0.08, validation: 0.20 },
+];
+
+export const errorDistribution = [
+  { range: '0-0.01', count: 12 },
+  { range: '0.01-0.02', count: 18 },
+  { range: '0.02-0.05', count: 10 },
+  { range: '0.05-0.1', count: 4 },
+  { range: '>0.1', count: 1 },
+];
