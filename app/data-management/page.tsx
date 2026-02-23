@@ -1,15 +1,14 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { Upload, FileSpreadsheet, X, CheckCircle, AlertCircle, Download, Trash2, Eye } from 'lucide-react';
-import { useSettings } from '@/app/context/SettingsContext';
+import { useState, useCallback, useEffect } from 'react';
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Download, Trash2, Eye } from 'lucide-react';
 
 interface UploadedFile {
   id: string;
   name: string;
   size: number;
   type: string;
-  uploadDate: Date;
+  uploadDate: string;
   status: 'processing' | 'completed' | 'error';
   rowCount?: number;
   columns?: string[];
@@ -17,52 +16,55 @@ interface UploadedFile {
 
 interface ParsedData {
   headers: string[];
-  rows: string[][];
   preview: string[][];
+  rowCount: number;
 }
 
 export default function DataManagement() {
-  const { settings } = useSettings();
-  const dark = settings.darkMode;
-
-  // Dark mode classes
-  const bgCard = dark ? 'bg-gray-800' : 'bg-white';
-  const borderColor = dark ? 'border-gray-700' : 'border-gray-200';
-  const textPrimary = dark ? 'text-white' : 'text-gray-900';
-  const textSecondary = dark ? 'text-gray-400' : 'text-gray-600';
-  const textMuted = dark ? 'text-gray-500' : 'text-gray-500';
-  const hoverBg = dark ? 'hover:bg-gray-700' : 'hover:bg-gray-50';
-  const dividerColor = dark ? 'divide-gray-700' : 'divide-gray-100';
-  const tableBg = dark ? 'bg-gray-700' : 'bg-gray-50';
-  const tableHeaderText = dark ? 'text-gray-300' : 'text-gray-700';
-  const inputBg = dark ? 'bg-gray-700' : 'bg-gray-100';
-
-  const [files, setFiles] = useState<UploadedFile[]>([
-    {
-      id: '1',
-      name: 'batch_reactor_exp_001.csv',
-      size: 245000,
-      type: 'text/csv',
-      uploadDate: new Date('2025-01-15'),
-      status: 'completed',
-      rowCount: 45,
-      columns: ['Temperature', 'Pressure', 'Time', 'Monomer_Conc', 'Catalyst_Conc', 'Yield']
-    },
-    {
-      id: '2',
-      name: 'batch_reactor_exp_002.csv',
-      size: 189000,
-      type: 'text/csv',
-      uploadDate: new Date('2025-01-20'),
-      status: 'completed',
-      rowCount: 38,
-      columns: ['Temperature', 'Pressure', 'Time', 'Monomer_Conc', 'Catalyst_Conc', 'Yield']
-    }
-  ]);
+  const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null);
   const [parsedData, setParsedData] = useState<ParsedData | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
+  const [previewLimit, setPreviewLimit] = useState(25);
+
+  const fetchFiles = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const response = await fetch('/api/data');
+      if (!response.ok) {
+        throw new Error('Failed to load files');
+      }
+      const data = await response.json();
+      const loaded = (data.files || []).map((file: UploadedFile) => ({
+        ...file,
+        id: file.name,
+        type: 'text/csv',
+        status: 'completed',
+      }));
+      setFiles(loaded);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to load files');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchFiles();
+  }, [fetchFiles]);
+
+  useEffect(() => {
+    if (parsedData?.preview.length) {
+      setSelectedRowIndex(0);
+    } else {
+      setSelectedRowIndex(null);
+    }
+  }, [parsedData]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -74,62 +76,65 @@ export default function DataManagement() {
     setIsDragging(false);
   }, []);
 
-  const parseCSV = (text: string): ParsedData => {
-    const lines = text.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-    const rows = lines.slice(1).map(line => 
-      line.split(',').map(cell => cell.trim().replace(/"/g, ''))
-    );
-    const preview = rows.slice(0, 5);
-    return { headers, rows, preview };
-  };
-
   const processFile = async (file: File) => {
+    setErrorMessage(null);
+    const tempId = `upload-${Date.now()}`;
     const newFile: UploadedFile = {
-      id: Date.now().toString(),
+      id: tempId,
       name: file.name,
       size: file.size,
-      type: file.type,
-      uploadDate: new Date(),
-      status: 'processing'
+      type: file.type || 'text/csv',
+      uploadDate: new Date().toISOString(),
+      status: 'processing',
     };
-    
-    setFiles(prev => [newFile, ...prev]);
-    setUploadProgress(0);
 
-    for (let i = 0; i <= 100; i += 10) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      setUploadProgress(i);
-    }
+    setFiles(prev => [newFile, ...prev]);
+    setUploadProgress(10);
 
     try {
-      const text = await file.text();
-      const parsed = parseCSV(text);
-      
-      setFiles(prev => prev.map(f => 
-        f.id === newFile.id 
-          ? { ...f, status: 'completed', rowCount: parsed.rows.length, columns: parsed.headers }
-          : f
-      ));
-      
-      setParsedData(parsed);
-      setSelectedFile({ ...newFile, status: 'completed', rowCount: parsed.rows.length, columns: parsed.headers });
-    } catch {
-      setFiles(prev => prev.map(f => 
-        f.id === newFile.id ? { ...f, status: 'error' } : f
-      ));
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch(`/api/data?preview=${previewLimit}`, { method: 'POST', body: formData });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || 'Upload failed');
+      }
+      const data = await response.json();
+      const uploaded: UploadedFile = {
+        id: data.name,
+        name: data.name,
+        size: data.size,
+        type: file.type || 'text/csv',
+        uploadDate: data.uploadDate,
+        status: 'completed',
+        rowCount: data.rowCount,
+        columns: data.columns,
+      };
+
+      setFiles(prev => prev.map(f => (f.id === tempId ? uploaded : f)));
+      setParsedData({
+        headers: data.columns || [],
+        preview: data.preview || [],
+        rowCount: data.rowCount || 0,
+      });
+      setSelectedFile(uploaded);
+      setSelectedRowIndex(data.preview?.length ? 0 : null);
+      setUploadProgress(100);
+    } catch (error) {
+      setFiles(prev => prev.map(f => (f.id === tempId ? { ...f, status: 'error' } : f)));
+      setErrorMessage(error instanceof Error ? error.message : 'Upload failed');
+    } finally {
+      setUploadProgress(null);
     }
-    
-    setUploadProgress(null);
   };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     const droppedFiles = Array.from(e.dataTransfer.files);
-    const csvFiles = droppedFiles.filter(f => f.name.endsWith('.csv') || f.type === 'text/csv');
-    
+    const csvFiles = droppedFiles.filter(f => f.name.toLowerCase().endsWith('.csv') || f.type === 'text/csv');
+
     if (csvFiles.length > 0) {
       processFile(csvFiles[0]);
     }
@@ -142,33 +147,76 @@ export default function DataManagement() {
     }
   };
 
-  const handleViewFile = async (file: UploadedFile) => {
+  const handleViewFile = async (file: UploadedFile, limit = previewLimit) => {
     setSelectedFile(file);
-    if (file.columns) {
-      const mockRows = Array.from({ length: file.rowCount || 10 }, () => 
-        file.columns!.map(() => (Math.random() * 100).toFixed(2))
-      );
+    try {
+      const response = await fetch(`/api/data?name=${encodeURIComponent(file.name)}&preview=${limit}`);
+      if (!response.ok) {
+        throw new Error('Failed to load preview');
+      }
+      const data = await response.json();
       setParsedData({
-        headers: file.columns,
-        rows: mockRows,
-        preview: mockRows.slice(0, 5)
+        headers: data.columns || [],
+        preview: data.preview || [],
+        rowCount: data.rowCount || 0,
       });
+      setSelectedRowIndex(data.preview?.length ? 0 : null);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to load preview');
     }
   };
 
-  const handleDeleteFile = (id: string) => {
-    setFiles(prev => prev.filter(f => f.id !== id));
-    if (selectedFile?.id === id) {
-      setSelectedFile(null);
-      setParsedData(null);
+  const handleDeleteFile = async (file: UploadedFile) => {
+    setErrorMessage(null);
+    try {
+      const response = await fetch('/api/data', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: file.name }),
+      });
+      if (!response.ok) {
+        throw new Error('Delete failed');
+      }
+      setFiles(prev => prev.filter(f => f.name !== file.name));
+      if (selectedFile?.name === file.name) {
+        setSelectedFile(null);
+        setParsedData(null);
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to delete file');
     }
   };
+
+  const handleDownloadFile = (file: UploadedFile) => {
+    window.open(`/api/data?name=${encodeURIComponent(file.name)}&download=1`, '_blank');
+  };
+
+  useEffect(() => {
+    if (selectedFile) {
+      handleViewFile(selectedFile, previewLimit);
+    }
+  }, [previewLimit, selectedFile]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
+
+  const normalizeHeader = (header: string) => header.trim().toLowerCase();
+
+  const getRowValue = (row: string[], header: string) => {
+    if (!parsedData) return '--';
+    const indexMap = new Map(parsedData.headers.map((h, i) => [normalizeHeader(h), i]));
+    const index = indexMap.get(normalizeHeader(header));
+    if (index === undefined) return '--';
+    return row[index] ?? '--';
+  };
+
+  const selectedRow =
+    parsedData && selectedRowIndex !== null
+      ? parsedData.preview[selectedRowIndex] || null
+      : null;
 
   return (
     <div className="p-8 space-y-6">
@@ -181,19 +229,17 @@ export default function DataManagement() {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
-          isDragging 
-            ? 'border-blue-500 bg-blue-500/10' 
+        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${isDragging
+            ? 'border-blue-500 bg-blue-500/10'
             : `${borderColor} ${bgCard} ${dark ? 'hover:border-gray-600' : 'hover:border-gray-400'}`
-        }`}
+          }`}
       >
         <div className="flex flex-col items-center">
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
-            isDragging ? 'bg-blue-500/20' : inputBg
-          }`}>
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isDragging ? 'bg-blue-500/20' : inputBg
+            }`}>
             <Upload className={`w-8 h-8 ${isDragging ? 'text-blue-500' : textMuted}`} />
           </div>
-          
+
           {uploadProgress !== null ? (
             <div className="w-full max-w-xs">
               <p className={`text-sm mb-2 ${textSecondary}`}>Uploading...</p>
@@ -220,53 +266,65 @@ export default function DataManagement() {
         </div>
       </div>
 
+      {errorMessage && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
+          {errorMessage}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className={`${bgCard} rounded-lg border ${borderColor}`}>
           <div className={`p-4 border-b ${borderColor}`}>
             <h2 className={`text-lg font-semibold ${textPrimary}`}>Uploaded Files</h2>
             <p className={`text-sm ${textMuted}`}>{files.length} files</p>
           </div>
-          <div className={`${dividerColor} divide-y max-h-96 overflow-y-auto`}>
-            {files.map(file => (
-              <div key={file.id} className={`p-4 ${hoverBg} ${selectedFile?.id === file.id ? (dark ? 'bg-blue-900/30' : 'bg-blue-50') : ''}`}>
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FileSpreadsheet className="w-5 h-5 text-green-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`font-medium truncate ${textPrimary}`}>{file.name}</p>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className={`text-xs ${textMuted}`}>{formatFileSize(file.size)}</span>
-                      <span className={`text-xs ${dark ? 'text-gray-600' : 'text-gray-300'}`}>•</span>
-                      <span className={`text-xs ${textMuted}`}>{file.rowCount} rows</span>
-                      <span className={`text-xs ${dark ? 'text-gray-600' : 'text-gray-300'}`}>•</span>
-                      {file.status === 'completed' && (
-                        <span className="inline-flex items-center gap-1 text-xs text-green-500">
-                          <CheckCircle className="w-3 h-3" /> Ready
-                        </span>
-                      )}
-                      {file.status === 'processing' && <span className="text-xs text-blue-500">Processing...</span>}
-                      {file.status === 'error' && (
-                        <span className="inline-flex items-center gap-1 text-xs text-red-500">
-                          <AlertCircle className="w-3 h-3" /> Error
-                        </span>
-                      )}
+          <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+            {isLoading ? (
+              <div className="p-6 text-sm text-gray-500">Loading files...</div>
+            ) : files.length === 0 ? (
+              <div className="p-6 text-sm text-gray-500">No files uploaded yet.</div>
+            ) : (
+              files.map(file => (
+                <div key={file.id} className={`p-4 hover:bg-gray-50 ${selectedFile?.id === file.id ? 'bg-blue-50' : ''}`}>
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <FileSpreadsheet className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 truncate">{file.name}</p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="text-xs text-gray-500">{formatFileSize(file.size)}</span>
+                        <span className="text-xs text-gray-300">•</span>
+                        <span className="text-xs text-gray-500">{file.rowCount ?? 0} rows</span>
+                        <span className="text-xs text-gray-300">•</span>
+                        {file.status === 'completed' && (
+                          <span className="inline-flex items-center gap-1 text-xs text-green-600">
+                            <CheckCircle className="w-3 h-3" /> Ready
+                          </span>
+                        )}
+                        {file.status === 'processing' && <span className="text-xs text-blue-600">Processing...</span>}
+                        {file.status === 'error' && (
+                          <span className="inline-flex items-center gap-1 text-xs text-red-600">
+                            <AlertCircle className="w-3 h-3" /> Error
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => handleViewFile(file)} className="p-2 hover:bg-gray-100 rounded-lg" title="View">
+                        <Eye className="w-4 h-4 text-gray-500" />
+                      </button>
+                      <button onClick={() => handleDownloadFile(file)} className="p-2 hover:bg-gray-100 rounded-lg" title="Download">
+                        <Download className="w-4 h-4 text-gray-500" />
+                      </button>
+                      <button onClick={() => handleDeleteFile(file)} className="p-2 hover:bg-red-50 rounded-lg" title="Delete">
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => handleViewFile(file)} className={`p-2 rounded-lg ${hoverBg}`} title="View">
-                      <Eye className={`w-4 h-4 ${textMuted}`} />
-                    </button>
-                    <button className={`p-2 rounded-lg ${hoverBg}`} title="Download">
-                      <Download className={`w-4 h-4 ${textMuted}`} />
-                    </button>
-                    <button onClick={() => handleDeleteFile(file.id)} className={`p-2 rounded-lg ${dark ? 'hover:bg-red-900/30' : 'hover:bg-red-50'}`} title="Delete">
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </button>
-                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -277,27 +335,49 @@ export default function DataManagement() {
           </div>
           <div className="p-4">
             {parsedData ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className={tableBg}>
-                      {parsedData.headers.map((header, i) => (
-                        <th key={i} className={`px-3 py-2 text-left font-medium whitespace-nowrap ${tableHeaderText}`}>{header}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {parsedData.preview.map((row, i) => (
-                      <tr key={i} className={`border-t ${borderColor}`}>
-                        {row.map((cell, j) => (
-                          <td key={j} className={`px-3 py-2 whitespace-nowrap ${textSecondary}`}>{cell}</td>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-gray-500">Preview rows</p>
+                  <select
+                    value={previewLimit}
+                    onChange={(e) => setPreviewLimit(Number(e.target.value))}
+                    className="border border-gray-200 rounded-md px-2 py-1 text-xs text-gray-700"
+                  >
+                    {[5, 25, 50, 100, 200].map((count) => (
+                      <option key={count} value={count}>
+                        {count}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="px-3 py-2 text-left font-medium text-gray-700 whitespace-nowrap">Row</th>
+                        {parsedData.headers.map((header, i) => (
+                          <th key={i} className={`px-3 py-2 text-left font-medium whitespace-nowrap ${tableHeaderText}`}>{header}</th>
                         ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {parsedData.rows.length > 5 && (
-                  <p className={`text-xs mt-3 text-center ${textMuted}`}>Showing 5 of {parsedData.rows.length} rows</p>
+                    </thead>
+                    <tbody>
+                      {parsedData.preview.map((row, i) => (
+                        <tr
+                          key={i}
+                          onClick={() => setSelectedRowIndex(i)}
+                          className={`border-t border-gray-100 cursor-pointer ${selectedRowIndex === i ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+                        >
+                          <td className="px-3 py-2 text-gray-500 whitespace-nowrap">{i + 1}</td>
+                          {row.map((cell, j) => (
+                            <td key={j} className={`px-3 py-2 whitespace-nowrap ${textSecondary}`}>{cell}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {parsedData.rowCount > parsedData.preview.length && (
+                  <p className="text-xs text-gray-400 text-center">Showing {parsedData.preview.length} of {parsedData.rowCount} rows</p>
                 )}
               </div>
             ) : (
@@ -311,6 +391,46 @@ export default function DataManagement() {
           </div>
         </div>
       </div>
+
+      {selectedRow && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-6">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Selected Row Summary</h2>
+            <p className="text-sm text-gray-500">Row {selectedRowIndex !== null ? selectedRowIndex + 1 : '--'}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <p className="text-xs text-gray-500 mb-2">Reaction & Conditions</p>
+              <p className="text-sm text-gray-900">Reaction: {getRowValue(selectedRow, 'Reaction')}</p>
+              <p className="text-sm text-gray-900">Temp: {getRowValue(selectedRow, 'temp')}</p>
+              <p className="text-sm text-gray-900">Time: {getRowValue(selectedRow, 'time')}</p>
+              <p className="text-sm text-gray-900">Monomer conc. [M]: {getRowValue(selectedRow, '[M]')}</p>
+              <p className="text-sm text-gray-900">Solvent conc. [S]: {getRowValue(selectedRow, '[S]')}</p>
+              <p className="text-sm text-gray-900">Initiator conc. [I]: {getRowValue(selectedRow, '[I]')}</p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <p className="text-xs text-gray-500 mb-2">Inputs (Recipe Amounts)</p>
+              <p className="text-sm text-gray-900">M (monomer amount): {getRowValue(selectedRow, 'M')}</p>
+              <p className="text-sm text-gray-900">S (solvent amount): {getRowValue(selectedRow, 'S')}</p>
+              <p className="text-sm text-gray-900">I (initiator amount): {getRowValue(selectedRow, 'I')}</p>
+              <p className="text-sm text-gray-900">[CTA]: {getRowValue(selectedRow, '[CTA]')}</p>
+            </div>
+          </div>
+
+          <div className="p-4 bg-blue-50 rounded-lg">
+            <p className="text-xs text-blue-700 mb-2">Actual Output</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm text-blue-900">
+              <span>X: {getRowValue(selectedRow, 'X')}</span>
+              <span>Mn: {getRowValue(selectedRow, 'Mn')}</span>
+              <span>Mw: {getRowValue(selectedRow, 'Mw')}</span>
+              <span>Mz: {getRowValue(selectedRow, 'Mz')}</span>
+              <span>Mz+1: {getRowValue(selectedRow, 'Mzplus1')}</span>
+              <span>Mv: {getRowValue(selectedRow, 'Mv')}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedFile && parsedData && (
         <div className={`${bgCard} rounded-lg border ${borderColor} p-6`}>
