@@ -1,11 +1,9 @@
-import path from "path";
-
 const FASTAPI_URL = process.env.FASTAPI_URL || "http://localhost:8000";
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { M, S, I, temp, time, Reaction } = body;
+        const { M, S, I, temp, time, Reaction, model_type } = body;
 
         console.log('Received model prediction request with inputs:', body);
 
@@ -30,6 +28,7 @@ export async function POST(request: Request) {
                 temp,
                 time,
                 Reaction,
+                model_type,
             }),
         });
 
@@ -52,8 +51,10 @@ export async function POST(request: Request) {
                 outputs: {
                     x_output: result.x_output,
                     m_output: result.m_output,
+                    m_output_log10: result.m_output_log10,
+                    model_type: result.model_type,
                 },
-                input: result.input,
+                input: result.input ?? body,
                 message: 'Prediction successful',
             },
             { status: 200 }

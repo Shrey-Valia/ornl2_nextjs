@@ -1,7 +1,6 @@
 'use client';
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { mwdChartData } from '@/lib/mock-data';
 import { useSettings } from '@/app/context/SettingsContext';
 
 interface MWDChartProps {
@@ -18,50 +17,68 @@ export function MWDChart({ title = "Molecular Weight Distribution" }: MWDChartPr
   const gridStroke = dark ? '#374151' : '#e5e7eb';
   const axisColor = dark ? '#9ca3af' : '#6b7280';
 
+  // Generate sample MWD data inline
+  const generateSampleData = () => {
+    const data = [];
+    for (let i = 0; i < 50; i++) {
+      const mw = Math.pow(10, 3 + (i / 50) * 3); // 1k to 1M
+      const predicted = Math.exp(-Math.pow((Math.log10(mw) - 4.5) / 0.5, 2));
+      const experimental = predicted * (0.9 + Math.random() * 0.2);
+      data.push({
+        mw: Math.round(mw),
+        predicted: Math.max(0, predicted),
+        experimental: Math.max(0, experimental),
+      });
+    }
+    return data;
+  };
+
+  const mwdChartData = generateSampleData();
+
   return (
     <div className={`${bgCard} rounded-lg border ${borderColor} p-6`}>
       <h3 className={`font-semibold mb-4 ${textPrimary}`}>{title}</h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={mwdChartData}>
           <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-          <XAxis 
-            dataKey="mw" 
+          <XAxis
+            dataKey="mw"
             label={{ value: 'Molecular Weight (g/mol)', position: 'insideBottom', offset: -5, fill: axisColor }}
             scale="log"
             domain={['dataMin', 'dataMax']}
             tick={{ fontSize: 12, fill: axisColor }}
             stroke={axisColor}
           />
-          <YAxis 
+          <YAxis
             label={{ value: 'Weight Fraction', angle: -90, position: 'insideLeft', fill: axisColor }}
             tick={{ fontSize: 12, fill: axisColor }}
             stroke={axisColor}
           />
-          <Tooltip 
-            contentStyle={{ 
-              backgroundColor: dark ? '#1f2937' : '#fff', 
-              borderColor: dark ? '#374151' : '#e5e7eb', 
+          <Tooltip
+            contentStyle={{
+              backgroundColor: dark ? '#1f2937' : '#fff',
+              borderColor: dark ? '#374151' : '#e5e7eb',
               color: dark ? '#fff' : '#111',
               borderRadius: '8px'
             }}
             labelStyle={{ color: dark ? '#fff' : '#111' }}
           />
-          <Legend 
+          <Legend
             wrapperStyle={{ color: axisColor }}
           />
-          <Line 
-            type="monotone" 
-            dataKey="predicted" 
-            stroke="#2563eb" 
-            strokeWidth={2} 
+          <Line
+            type="monotone"
+            dataKey="predicted"
+            stroke="#2563eb"
+            strokeWidth={2}
             name="Predicted"
             dot={false}
           />
-          <Line 
-            type="monotone" 
-            dataKey="experimental" 
-            stroke="#f97316" 
-            strokeWidth={2} 
+          <Line
+            type="monotone"
+            dataKey="experimental"
+            stroke="#f97316"
+            strokeWidth={2}
             name="Experimental"
             strokeDasharray="5 5"
             dot={false}
