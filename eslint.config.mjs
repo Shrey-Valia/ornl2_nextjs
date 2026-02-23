@@ -1,5 +1,6 @@
 import { defineConfig, globalIgnores } from "eslint/config";
-import nextjs from "@next/eslint-plugin-next";
+import nextVitals from "eslint-config-next/core-web-vitals.js";
+import nextTs from "eslint-config-next/typescript.js";
 
 const eslintConfig = defineConfig([
   globalIgnores([

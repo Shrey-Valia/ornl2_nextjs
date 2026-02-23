@@ -197,7 +197,9 @@ export default function ForwardPrediction() {
       // DEBUG: Log what the model returns
       console.log('Model response:', response);
 
-      const { conversion, mn, mw, mz, mzPlus1, mv } = response;
+
+      const { conversion, molecularWeights } = response;
+      const { Mn: mn, Mw: mw, Mz: mz, Mz_plus1: mzPlus1, Mv: mv } = molecularWeights;
 
       const mwdData = generateMWDData(mn, mw, mz);
 

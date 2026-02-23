@@ -1,4 +1,9 @@
-fastapi==0.115.6
-uvicorn==0.30.6
-numpy==1.26.4
-torch==2.3.1
+﻿# PCINN Backend Dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.0.0
+torch>=2.0.0
+numpy>=1.24.0
+pandas>=2.0.0
+openpyxl>=3.1.0
+python-multipart>=0.0.6
