@@ -143,28 +143,28 @@ export default function ForwardPrediction() {
   const generateMWDData = (mn: number, mw: number, mz: number) => {
     const data: { mw: number; predicted: number }[] = [];
     const numPoints = 50;
-    
+
     // Handle edge cases where model outputs might be very small or invalid
     const safeMw = Math.max(Math.abs(mw), 1000); // Minimum 1000 g/mol for visualization
     const safeMz = Math.max(Math.abs(mz), safeMw * 1.1); // Ensure Mz > Mw
     const safePolydispersity = safeMz / safeMw; // PDI = Mz/Mw
-    
+
     // Generate MW values on log scale from 100 to 1M g/mol
     const minMW = 100;
     const maxMW = 1000000;
-    
+
     for (let i = 0; i < numPoints; i++) {
       // Log scale: 10^2 to 10^6
       const logMW = Math.log10(minMW) + (i / (numPoints - 1)) * (Math.log10(maxMW) - Math.log10(minMW));
       const mwPoint = Math.pow(10, logMW);
-      
+
       // Lognormal distribution (standard for polymer MW distributions)
       const logMean = Math.log(safeMw);
       const logStdDev = Math.log(safePolydispersity) / 2;
-      
+
       const exponent = -Math.pow((Math.log(mwPoint) - logMean) / logStdDev, 2) / 2;
       const predicted = (1 / (mwPoint * logStdDev * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
-      
+
       data.push({
         mw: Math.round(mwPoint),
         predicted: Math.max(0, predicted),
@@ -193,14 +193,16 @@ export default function ForwardPrediction() {
 
     try {
       const response = await getModelPrediction({ M, S, I, temp, time, Reaction });
-      
+
       // DEBUG: Log what the model returns
       console.log('Model response:', response);
-      
-      const { conversion, mn, mw, mz, mzPlus1, mv } = response;
-      
+
+
+      const { conversion, molecularWeights } = response;
+      const { Mn: mn, Mw: mw, Mz: mz, Mz_plus1: mzPlus1, Mv: mv } = molecularWeights;
+
       const mwdData = generateMWDData(mn, mw, mz);
-      
+
       const result: PredictionResult = {
         id: Date.now().toString(),
         timestamp: new Date().toISOString(),
@@ -539,14 +541,14 @@ export default function ForwardPrediction() {
                           X-axis is log10(Mw) (right = larger chains). Y-axis is conversion (up = higher conversion).
                         </p>
                         <div className={`mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4`}>
-                            <div className={`rounded-lg p-3 ${dark ? 'bg-gray-600' : 'bg-gray-50'}`}>
-                              <div className={`text-xs uppercase tracking-wide ${mutedClass}`}>Selected Regime</div>
-                              <div className={`text-sm font-semibold mt-1 ${textClass}`}>{latestRegime.best.id}: {latestRegime.best.name}</div>
-                              <p className={`text-xs mt-1 ${mutedClass}`}>{latestRegime.best.description}</p>
-                              <p className={`text-[11px] mt-2 ${mutedClass}`}>
+                          <div className={`rounded-lg p-3 ${dark ? 'bg-gray-600' : 'bg-gray-50'}`}>
+                            <div className={`text-xs uppercase tracking-wide ${mutedClass}`}>Selected Regime</div>
+                            <div className={`text-sm font-semibold mt-1 ${textClass}`}>{latestRegime.best.id}: {latestRegime.best.name}</div>
+                            <p className={`text-xs mt-1 ${mutedClass}`}>{latestRegime.best.description}</p>
+                            <p className={`text-[11px] mt-2 ${mutedClass}`}>
                               Selected regime = the closest historical cluster to your prediction in output space.
-                              </p>
-                            </div>
+                            </p>
+                          </div>
                           <div className={`rounded-lg p-3 ${dark ? 'bg-gray-600' : 'bg-gray-50'}`}>
                             <div className={`text-xs uppercase tracking-wide ${mutedClass}`}>Typical Conversion</div>
                             <div className={`text-lg font-semibold ${textClass}`}>{(latestRegime.best.meanOutputs[0] * 100).toFixed(1)}%</div>
