@@ -17,7 +17,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-color-scheme="normal">
+      <head>
+        <meta name="color-scheme" content="light dark" />
+      </head>
       <body className={inter.className}>
         <SettingsProvider>
           <MainLayout>{children}</MainLayout>
