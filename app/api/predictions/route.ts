@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 // POST /api/predictions - Save new prediction
 export async function POST(request: NextRequest) {
   try {

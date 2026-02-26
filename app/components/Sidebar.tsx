@@ -9,7 +9,8 @@ import {
   RefreshCw,
   Activity,
   FileText,
-  Settings
+  Settings,
+  BrainCircuit,
 } from 'lucide-react';
 import { useSettings } from '@/app/context/SettingsContext';
 
@@ -20,6 +21,7 @@ const navItems = [
   { href: '/inverse-problem', label: 'Inverse Problem', icon: RefreshCw },
   { href: '/model-performance', label: 'Model Performance', icon: Activity },
   { href: '/results-analysis', label: 'Results Analysis', icon: FileText },
+  { href: '/model-training', label: 'Model Training', icon: BrainCircuit },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -67,7 +69,9 @@ export default function Sidebar() {
       <div className={`p-4 border-t ${dark ? 'border-gray-700' : 'border-gray-200'}`}>
         <div className={`rounded-lg p-4 ${dark ? 'bg-gray-700' : 'bg-gray-50'}`}>
           <p className={`text-xs mb-1 ${dark ? 'text-gray-400' : 'text-gray-600'}`}>Model Version</p>
-          <p className={`text-sm font-semibold ${dark ? 'text-white' : 'text-gray-900'}`}>{settings.modelVersion}</p>
+          <p className={`text-sm font-semibold ${dark ? 'text-white' : 'text-gray-900'}`}>
+            {settings.modelVersion}
+          </p>
         </div>
       </div>
     </div>

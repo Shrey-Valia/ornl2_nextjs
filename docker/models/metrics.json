@@ -1,7 +1,7 @@
 {
-  "excel_path": "/app/PMMAordered.xlsx",
-  "assets_dir": "/app",
-  "out_dir": "/app/models",
+  "excel_path": "/Users/zain/Desktop/Neural Network/ornl2_nextjs/docker/PMMAordered.xlsx",
+  "assets_dir": "/Users/zain/Desktop/Neural Network/ornl2_nextjs/docker",
+  "out_dir": "/Users/zain/Desktop/Neural Network/ornl2_nextjs/docker/models",
   "test_reaction": 8,
   "epochs": 10000,
   "lr": 0.0003,
@@ -10,8 +10,8 @@
   "jac_weight": 1.0,
   "num_train_rows": 49,
   "num_test_rows": 8,
-  "final_nn_test_loss": 0.1282254308462143,
-  "final_pcinn_test_loss": 0.00459623895585537,
+  "final_nn_test_loss": 0.12822528183460236,
+  "final_pcinn_test_loss": 0.004596239421516657,
   "outputs": [
     "nn_model.pt",
     "pcinn_model.pt",
