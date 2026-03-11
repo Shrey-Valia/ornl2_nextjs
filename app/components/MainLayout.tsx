@@ -8,7 +8,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const dark = settings.darkMode;
 
   return (
-    <div className={`flex min-h-screen transition-colors duration-300 ${dark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div
+      suppressHydrationWarning
+      className={`flex min-h-screen transition-colors duration-300 ${dark ? 'bg-gray-900' : 'bg-gray-50'}`}
+    >
       <Sidebar />
       <main className="flex-1 overflow-auto">
         {children}

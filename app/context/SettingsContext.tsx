@@ -85,6 +85,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('ornl-settings');
   };
 
+  // Don't render children until settings are loaded from localStorage.
+  // This prevents a hydration mismatch between server (no localStorage)
+  // and client (has localStorage with saved dark mode etc.)
+  if (!isLoaded) {
+    return null;
+  }
+
   return (
     <SettingsContext.Provider value={{ settings, updateSetting, resetSettings, isLoaded }}>
       {children}
