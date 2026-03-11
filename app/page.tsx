@@ -5,6 +5,7 @@ import { TrendingUp, Database, Activity, Upload, Play, Eye } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { useEffect, useState } from 'react';
 import { useSettings } from '@/app/context/SettingsContext';
+import { getThemeColors } from '@/lib/theme';
 
 type PredictionResult = {
   id: string;
@@ -33,13 +34,7 @@ export default function Dashboard() {
     }
   }, []);
 
-  const bgCard = dark ? 'bg-gray-800' : 'bg-white';
-  const borderColor = dark ? 'border-gray-700' : 'border-gray-200';
-  const textPrimary = dark ? 'text-white' : 'text-gray-900';
-  const textSecondary = dark ? 'text-gray-400' : 'text-gray-600';
-  const progressBg = dark ? 'bg-gray-700' : 'bg-gray-200';
-  const gridStroke = dark ? '#374151' : '#e5e7eb';
-  const axisColor = dark ? '#9ca3af' : '#6b7280';
+  const { bgCard, borderColor, textPrimary, textSecondary, progressBg, gridStroke, axisColor } = getThemeColors(dark);
 
   const stats = predictions.length > 0 ? {
     totalPredictions: predictions.length,

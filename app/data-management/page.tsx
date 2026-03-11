@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Download, Trash2, Eye } from 'lucide-react';
+import { useSettings } from '@/app/context/SettingsContext';
+import { getThemeColors } from '@/lib/theme';
 
 interface UploadedFile {
   id: string;
@@ -21,6 +23,9 @@ interface ParsedData {
 }
 
 export default function DataManagement() {
+  const { settings } = useSettings();
+  const dark = settings.darkMode;
+  const { bgCard, borderColor, textPrimary, textSecondary, inputBg, textMuted, tableHeaderText, tableBg } = getThemeColors(dark);
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null);
@@ -285,17 +290,17 @@ export default function DataManagement() {
               <div className="p-6 text-sm text-gray-500">No files uploaded yet.</div>
             ) : (
               files.map(file => (
-                <div key={file.id} className={`p-4 hover:bg-gray-50 ${selectedFile?.id === file.id ? 'bg-blue-50' : ''}`}>
+                <div key={file.id} className={`p-4 hover:${dark ? 'bg-gray-700' : 'bg-gray-50'} ${selectedFile?.id === file.id ? (dark ? 'bg-blue-900/30' : 'bg-blue-50') : ''}`}>
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       <FileSpreadsheet className="w-5 h-5 text-green-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">{file.name}</p>
+                      <p className={`font-medium ${textPrimary} truncate`}>{file.name}</p>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className="text-xs text-gray-500">{formatFileSize(file.size)}</span>
-                        <span className="text-xs text-gray-300">•</span>
-                        <span className="text-xs text-gray-500">{file.rowCount ?? 0} rows</span>
+                        <span className={`text-xs ${textMuted}`}>{formatFileSize(file.size)}</span>
+                        <span className={`text-xs ${dark ? 'text-gray-600' : 'text-gray-300'}`}>•</span>
+                        <span className={`text-xs ${textMuted}`}>{file.rowCount ?? 0} rows</span>
                         <span className="text-xs text-gray-300">•</span>
                         {file.status === 'completed' && (
                           <span className="inline-flex items-center gap-1 text-xs text-green-600">
@@ -353,8 +358,8 @@ export default function DataManagement() {
                 <div className="overflow-x-auto max-h-80 overflow-y-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-gray-50">
-                        <th className="px-3 py-2 text-left font-medium text-gray-700 whitespace-nowrap">Row</th>
+                      <tr className={tableBg}>
+                        <th className={`px-3 py-2 text-left font-medium ${tableHeaderText} whitespace-nowrap`}>Row</th>
                         {parsedData.headers.map((header, i) => (
                           <th key={i} className={`px-3 py-2 text-left font-medium whitespace-nowrap ${tableHeaderText}`}>{header}</th>
                         ))}
@@ -365,9 +370,9 @@ export default function DataManagement() {
                         <tr
                           key={i}
                           onClick={() => setSelectedRowIndex(i)}
-                          className={`border-t border-gray-100 cursor-pointer ${selectedRowIndex === i ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+                          className={`border-t ${borderColor} cursor-pointer ${selectedRowIndex === i ? (dark ? 'bg-blue-900/30' : 'bg-blue-50') : (dark ? 'hover:bg-gray-700' : 'hover:bg-gray-50')}`}
                         >
-                          <td className="px-3 py-2 text-gray-500 whitespace-nowrap">{i + 1}</td>
+                          <td className={`px-3 py-2 ${textMuted} whitespace-nowrap`}>{i + 1}</td>
                           {row.map((cell, j) => (
                             <td key={j} className={`px-3 py-2 whitespace-nowrap ${textSecondary}`}>{cell}</td>
                           ))}
@@ -377,7 +382,7 @@ export default function DataManagement() {
                   </table>
                 </div>
                 {parsedData.rowCount > parsedData.preview.length && (
-                  <p className="text-xs text-gray-400 text-center">Showing {parsedData.preview.length} of {parsedData.rowCount} rows</p>
+                  <p className={`text-xs ${dark ? 'text-gray-500' : 'text-gray-400'} text-center`}>Showing {parsedData.preview.length} of {parsedData.rowCount} rows</p>
                 )}
               </div>
             ) : (
@@ -393,34 +398,34 @@ export default function DataManagement() {
       </div>
 
       {selectedRow && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-6">
+        <div className={`${bgCard} rounded-lg border ${borderColor} p-6 space-y-6`}>
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Selected Row Summary</h2>
-            <p className="text-sm text-gray-500">Row {selectedRowIndex !== null ? selectedRowIndex + 1 : '--'}</p>
+            <h2 className={`text-lg font-semibold ${textPrimary}`}>Selected Row Summary</h2>
+            <p className={`text-sm ${textMuted}`}>Row {selectedRowIndex !== null ? selectedRowIndex + 1 : '--'}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-500 mb-2">Reaction & Conditions</p>
-              <p className="text-sm text-gray-900">Reaction: {getRowValue(selectedRow, 'Reaction')}</p>
-              <p className="text-sm text-gray-900">Temp: {getRowValue(selectedRow, 'temp')}</p>
-              <p className="text-sm text-gray-900">Time: {getRowValue(selectedRow, 'time')}</p>
-              <p className="text-sm text-gray-900">Monomer conc. [M]: {getRowValue(selectedRow, '[M]')}</p>
-              <p className="text-sm text-gray-900">Solvent conc. [S]: {getRowValue(selectedRow, '[S]')}</p>
-              <p className="text-sm text-gray-900">Initiator conc. [I]: {getRowValue(selectedRow, '[I]')}</p>
+            <div className={`p-4 ${tableBg} rounded-lg`}>
+              <p className={`text-xs ${textMuted} mb-2`}>Reaction & Conditions</p>
+              <p className={`text-sm ${textPrimary}`}>Reaction: {getRowValue(selectedRow, 'Reaction')}</p>
+              <p className={`text-sm ${textPrimary}`}>Temp: {getRowValue(selectedRow, 'temp')}</p>
+              <p className={`text-sm ${textPrimary}`}>Time: {getRowValue(selectedRow, 'time')}</p>
+              <p className={`text-sm ${textPrimary}`}>Monomer conc. [M]: {getRowValue(selectedRow, '[M]')}</p>
+              <p className={`text-sm ${textPrimary}`}>Solvent conc. [S]: {getRowValue(selectedRow, '[S]')}</p>
+              <p className={`text-sm ${textPrimary}`}>Initiator conc. [I]: {getRowValue(selectedRow, '[I]')}</p>
             </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-500 mb-2">Inputs (Recipe Amounts)</p>
-              <p className="text-sm text-gray-900">M (monomer amount): {getRowValue(selectedRow, 'M')}</p>
-              <p className="text-sm text-gray-900">S (solvent amount): {getRowValue(selectedRow, 'S')}</p>
-              <p className="text-sm text-gray-900">I (initiator amount): {getRowValue(selectedRow, 'I')}</p>
-              <p className="text-sm text-gray-900">[CTA]: {getRowValue(selectedRow, '[CTA]')}</p>
+            <div className={`p-4 ${tableBg} rounded-lg`}>
+              <p className={`text-xs ${textMuted} mb-2`}>Inputs (Recipe Amounts)</p>
+              <p className={`text-sm ${textPrimary}`}>M (monomer amount): {getRowValue(selectedRow, 'M')}</p>
+              <p className={`text-sm ${textPrimary}`}>S (solvent amount): {getRowValue(selectedRow, 'S')}</p>
+              <p className={`text-sm ${textPrimary}`}>I (initiator amount): {getRowValue(selectedRow, 'I')}</p>
+              <p className={`text-sm ${textPrimary}`}>[CTA]: {getRowValue(selectedRow, '[CTA]')}</p>
             </div>
           </div>
 
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <p className="text-xs text-blue-700 mb-2">Actual Output</p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm text-blue-900">
+          <div className={`p-4 ${dark ? 'bg-blue-900/20' : 'bg-blue-50'} rounded-lg`}>
+            <p className={`text-xs ${dark ? 'text-blue-300' : 'text-blue-700'} mb-2`}>Actual Output</p>
+            <div className={`grid grid-cols-2 md:grid-cols-3 gap-2 text-sm ${dark ? 'text-blue-200' : 'text-blue-900'}`}>
               <span>X: {getRowValue(selectedRow, 'X')}</span>
               <span>Mn: {getRowValue(selectedRow, 'Mn')}</span>
               <span>Mw: {getRowValue(selectedRow, 'Mw')}</span>

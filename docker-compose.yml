@@ -11,7 +11,7 @@ services:
       dockerfile: Dockerfile
     container_name: pcinn-backend
     ports:
-      - "8000:8000"
+      - "8000"
     volumes:
       - ./docker:/app
     environment:
